@@ -35,12 +35,14 @@ public class SynchronousStore implements Closeable {
 		}
 	}
 
-	public <K, V> BoundTopic<K, V> defineTopic(TopicName name, byte[] code, byte[] arguments, ICodec<K> keyCodec, ICodec<V> valueCodec) {
+	public <K, V> BoundTopic<K, V> defineTopic(TopicName name, byte[] code, byte[] arguments, ICodec<K> keyCodec, ICodec<V> valueCodec, boolean allowExisting) {
 		// Try to create the topic (we accept failure here since it may already exist).
 		// We don't update our commit offset since this only changes validity of calls, not consistent local data.
-		boolean didCreate = (CommitInfo.Effect.VALID == _client.synchronousCreateTopic(name, code, arguments).effect);
+		CommitInfo.Effect effect = _client.synchronousCreateTopic(name, code, arguments).effect;
+		boolean didCreate = (CommitInfo.Effect.VALID == effect);
+		boolean alreadyExists = (CommitInfo.Effect.INVALID == effect);
 		BoundTopic<K, V> bound = null;
-		if (didCreate) {
+		if (didCreate || (alreadyExists && allowExisting)) {
 			bound = _registerTopic(name, keyCodec, valueCodec);
 		}
 		return bound;

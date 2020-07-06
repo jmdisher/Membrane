@@ -35,7 +35,7 @@ public class SynchronousStoreTest {
 		byte[] code = new byte[] {1};
 		byte[] arguments = new byte[] {2};
 		factory.getWriter().topicCreate = CommitInfo.create(CommitInfo.Effect.VALID, 1L);
-		store.defineTopic(topic, code, arguments, keyCodec, valueCodec);
+		store.defineTopic(topic, code, arguments, keyCodec, valueCodec, false);
 		Assert.assertEquals(1, factory.getReaders().size());
 		store.close();
 		factory.verifyClosed(1);
