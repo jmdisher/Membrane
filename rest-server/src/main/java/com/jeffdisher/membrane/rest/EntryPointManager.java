@@ -52,12 +52,22 @@ public class EntryPointManager {
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
-		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables) -> {
+		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables, Map<String, String[]> postVariables) -> {
+			// We get the topic name from the path variables.
 			String topicName = variables[0];
-			_createField(topicName);
-			response.setContentType("text/plain;charset=utf-8");
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.getWriter().println(topicName);
+			// And the type and code/arguments data from the post variables (note that the code and arguments are actually binary).
+			String type = _getFirstElement(postVariables, "type");
+			String code = _getFirstElement(postVariables, "code");
+			String arguments = _getFirstElement(postVariables, "arguments");
+			if ((null != type) && (null != code) && (null != arguments)) {
+				_createField(topicName);
+				response.setContentType("text/plain;charset=utf-8");
+				response.setStatus(HttpServletResponse.SC_OK);
+				response.getWriter().println(topicName);
+			} else {
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println("Required POST variables:  type, code, arguments");
+			}
 		});
 	}
 
@@ -111,5 +121,12 @@ public class EntryPointManager {
 				entry -> entry.getKey().string,
 				entry -> (String)entry.getValue())
 		);
+	}
+
+	private static String _getFirstElement(Map<String, String[]> parameters, String key) {
+		String[] values = parameters.get(key);
+		return ((values != null) && (1 == values.length))
+				? values[0]
+				: null;
 	}
 }
