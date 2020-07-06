@@ -1,6 +1,7 @@
 package com.jeffdisher.membrane.rest;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -68,15 +69,17 @@ public class EntryPointManager {
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
-		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables, Map<String, String[]> postVariables) -> {
+		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables, Map<String, byte[]> parts) -> {
 			// We get the topic name from the path variables.
 			String topicName = variables[0];
-			// And the type and code/arguments data from the post variables (note that the code and arguments are actually binary).
-			Type type = Type.mapFromString(_getFirstElement(postVariables, "type"));
-			String code = _getFirstElement(postVariables, "code");
-			String arguments = _getFirstElement(postVariables, "arguments");
+			// We get everything else from the multi-part post vars.
+			// NOTE:  Using multi-part doesn't seem to be as common in REST as just encoding the binary as part of a
+			// large JSON document and then parsing it and decoding it on the server so this may change, in the future.
+			Type type = Type.mapFromString(_asString(parts.get("type")));
+			byte[] code = parts.get("code");
+			byte[] arguments = parts.get("arguments");
 			if ((null != type) && (null != code) && (null != arguments)) {
-				boolean allowExisting = (null != _getFirstElement(postVariables, "allowExisting"));
+				boolean allowExisting = (null != parts.get("allowExisting"));
 				_createField(type, topicName, allowExisting);
 				response.setContentType("text/plain;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
@@ -143,11 +146,12 @@ public class EntryPointManager {
 		);
 	}
 
-	private static String _getFirstElement(Map<String, String[]> parameters, String key) {
-		String[] values = parameters.get(key);
-		return ((values != null) && (1 == values.length))
-				? values[0]
-				: null;
+	private String _asString(byte[] bytes) {
+		String string = null;
+		if (null != bytes) {
+			string = new String(bytes, StandardCharsets.UTF_8);
+		}
+		return string;
 	}
 
 

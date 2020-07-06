@@ -2,9 +2,9 @@
 
 # NOTE: The use of "integer" means that it will be expecting the data to be encoded as a 4-byte signed big-endian value.
 
-curl -XPOST "localhost:8080/topic1" -d "type=String&code=&arguments="
-curl -XPOST "localhost:8080/topic2" -d "type=String&code=&arguments="
-curl -XPOST "localhost:8080/employee_number" -d "type=integer&code=&arguments="
+curl -XPOST "localhost:8080/topic1" -F "type=String" -F "code=" -F "arguments="
+curl -XPOST "localhost:8080/topic2" -F "type=String" -F "code=" -F "arguments="
+curl -XPOST "localhost:8080/employee_number" -F "type=integer" -F "code=" -F "arguments="
 printf "\x00\x00\x00\x01" > number.temp
 curl -XPUT "localhost:8080/employee_number/key1" --data-binary "@number.temp"
 printf "\x00\x00\x00\x02" > number.temp
