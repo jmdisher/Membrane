@@ -35,13 +35,13 @@ public class EntryPointManager {
 		_topics = new HashMap<>();
 		
 		// Install handlers for getting whole documents and posting new fields.
-		_server.addHandler("DELETE", "/exit", 0, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
+		_server.addDeleteHandler("/exit", 0, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
 			response.setContentType("text/plain;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().println("Shutting down");
 			stopLatch.countDown();
 		});
-		_server.addHandler("GET", "", 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
+		_server.addGetHandler("", 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
 			String key = variables[0];
 			Map<String, String> document = _getDocument(key);
 			response.setContentType("text/plain;charset=utf-8");
@@ -52,7 +52,7 @@ public class EntryPointManager {
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
-		_server.addHandler("POST", "", 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
+		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
 			String topicName = variables[0];
 			_createField(topicName);
 			response.setContentType("text/plain;charset=utf-8");
@@ -74,7 +74,7 @@ public class EntryPointManager {
 		synchronized(_lock) {
 			_topics.put(name, topic);
 		}
-		_server.addHandler("GET", "/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputLine) -> {
+		_server.addGetHandler("/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputLine) -> {
 			String value = topic.get(variables[0]);
 			if (null != value) {
 				response.setContentType("text/plain;charset=utf-8");
@@ -84,7 +84,7 @@ public class EntryPointManager {
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			}
 		});
-		_server.addHandler("PUT", "/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
+		_server.addPutHandler("/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
 			StringBuilder builder = new StringBuilder();
 			byte[] buffer = new byte[1024];
 			int readSize = inputStream.read(buffer);
