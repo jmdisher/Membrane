@@ -74,7 +74,7 @@ public class SynchronousStore implements Closeable {
 			// This is a demonstration, so we don't want to handle this and hide usage errors (although we could just fail to create the BoundTopic).
 			throw Assert.unexpected(e);
 		}
-		BoundTopic<K, V> bound = new BoundTopic<K, V>(_client, name, new LockShim<K, V>(_lock, data), keyCodec, valueCodec);
+		BoundTopic<K, V> bound = new BoundTopic<K, V>(_client, name, new LockShim<K, V>(_lock, data), keyCodec);
 		synchronized(_lock) {
 			TopicData<?, ?> removed = _topics.put(name, data);
 			// We don't handle this error - it is just incorrect usage.

@@ -11,18 +11,16 @@ public class BoundTopic<K, V> {
 	private final TopicName _topic;
 	private final IClientTopicShim<K, V> _shim;
 	private final ICodec<K> _keyCodec;
-	private final ICodec<V> _valueCodec;
 
-	public BoundTopic(IWritingConnection sharedWriter, TopicName topic, IClientTopicShim<K, V> shim, ICodec<K> keyCodec, ICodec<V> valueCodec) {
+	public BoundTopic(IWritingConnection sharedWriter, TopicName topic, IClientTopicShim<K, V> shim, ICodec<K> keyCodec) {
 		_sharedWriter = sharedWriter;
 		_topic = topic;
 		_shim = shim;
 		_keyCodec = keyCodec;
-		_valueCodec = valueCodec;
 	}
 
-	public boolean put(K key, V value) {
-		CommitInfo info = _sharedWriter.synchronousPut(_topic, _keyCodec.serialize(key), _valueCodec.serialize(value));
+	public boolean put(K key, byte[] rawValue) {
+		CommitInfo info = _sharedWriter.synchronousPut(_topic, _keyCodec.serialize(key), rawValue);
 		boolean didPut = false;
 		if (CommitInfo.Effect.VALID == info.effect) {
 			_shim.updateIntentionOffset(info.intentionOffset);

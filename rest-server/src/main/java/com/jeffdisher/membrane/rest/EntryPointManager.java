@@ -1,7 +1,6 @@
 package com.jeffdisher.membrane.rest;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -9,12 +8,16 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
 import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.utils.Assert;
 import com.jeffdisher.membrane.store.BoundTopic;
 import com.jeffdisher.membrane.store.SynchronousStore;
+import com.jeffdisher.membrane.store.codecs.ICodec;
+import com.jeffdisher.membrane.store.codecs.IntegerCodec;
 import com.jeffdisher.membrane.store.codecs.StringCodec;
 
 
@@ -23,10 +26,13 @@ import com.jeffdisher.membrane.store.codecs.StringCodec;
  * Note that the given latch is counted down when a DELETE call is made to the "/exit" entry-point.
  */
 public class EntryPointManager {
+	private static final int VALUE_SIZE_BYTES = 32 * 1024;
+	private static final StringCodec STRING_CODEC = new StringCodec();
+
 	private final RestServer _server;
 	private final SynchronousStore _store;
 	private final Object _lock;
-	private final Map<String, BoundTopic<String, String>> _topics;
+	private final Map<String, BoundTopic<String, ?>> _topics;
 
 	public EntryPointManager(CountDownLatch stopLatch, RestServer server, SynchronousStore store) {
 		_server = server;
@@ -43,12 +49,22 @@ public class EntryPointManager {
 		});
 		_server.addGetHandler("", 1, (HttpServletResponse response, String[] variables) -> {
 			String key = variables[0];
-			Map<String, String> document = _getDocument(key);
+			Map<String, Object> document = _getDocument(key);
 			response.setContentType("text/plain;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			JsonObject root = new JsonObject();
-			for (Map.Entry<String, String> entry : document.entrySet()) {
-				root.add(entry.getKey(), entry.getValue());
+			for (Map.Entry<String, Object> entry : document.entrySet()) {
+				Object value = entry.getValue();
+				// We know that the data is one of our predefined types but we don't have that information by this point.
+				JsonValue json;
+				if (value instanceof String) {
+					json = Json.value((String) value);
+				} else if (value instanceof Integer) {
+					json = Json.value((Integer) value);
+				} else {
+					throw Assert.unreachable("Unknown type in map: " + value.getClass().getName());
+				}
+				root.add(entry.getKey(), json);
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
@@ -56,11 +72,11 @@ public class EntryPointManager {
 			// We get the topic name from the path variables.
 			String topicName = variables[0];
 			// And the type and code/arguments data from the post variables (note that the code and arguments are actually binary).
-			String type = _getFirstElement(postVariables, "type");
+			Type type = Type.mapFromString(_getFirstElement(postVariables, "type"));
 			String code = _getFirstElement(postVariables, "code");
 			String arguments = _getFirstElement(postVariables, "arguments");
 			if ((null != type) && (null != code) && (null != arguments)) {
-				_createField(topicName);
+				_createField(type, topicName);
 				response.setContentType("text/plain;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
 				response.getWriter().println(topicName);
@@ -75,17 +91,18 @@ public class EntryPointManager {
 	 * Called in response to a top-level POST:  Creates a new field with the given name.
 	 * Fundamentally, this maps into creating a new topic with this name.
 	 * 
+	 * @param type 
 	 * @param name
 	 */
-	private void _createField(String name) {
+	private void _createField(Type type, String name) {
 		Assert.assertTrue(!name.contains("."));
-		BoundTopic<String, String> topic = _store.defineTopic(TopicName.fromString(name), new byte[0], new byte[0], new StringCodec(), new StringCodec());
+		BoundTopic<String, ?> topic = _store.defineTopic(TopicName.fromString(name), new byte[0], new byte[0], STRING_CODEC, type.codec);
 		Assert.assertTrue(null != topic);
 		synchronized(_lock) {
 			_topics.put(name, topic);
 		}
 		_server.addGetHandler("/" + name, 1, (HttpServletResponse response, String[] variables) -> {
-			String value = topic.get(variables[0]);
+			Object value = topic.get(variables[0]);
 			if (null != value) {
 				response.setContentType("text/plain;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
@@ -95,18 +112,19 @@ public class EntryPointManager {
 			}
 		});
 		_server.addPutHandler("/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
-			StringBuilder builder = new StringBuilder();
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[VALUE_SIZE_BYTES];
 			int readSize = inputStream.read(buffer);
+			int start = 0;
 			while (-1 != readSize) {
-				builder.append(new String(buffer, 0, readSize, StandardCharsets.UTF_8));
-				readSize = inputStream.read(buffer);
+				start += readSize;
+				readSize = inputStream.read(buffer, start, buffer.length - start);
 			}
-			String wholeDocument = builder.toString();
-			topic.put(variables[0], wholeDocument);
+			byte[] value = new byte[start];
+			System.arraycopy(buffer, 0, value, 0, start);
+			topic.put(variables[0], value);
 			response.setContentType("text/plain;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
-			response.getWriter().println(wholeDocument);
+			response.getWriter().println("Received " + start + " bytes");
 		});
 	}
 
@@ -116,10 +134,10 @@ public class EntryPointManager {
 	 * @param key
 	 * @return
 	 */
-	private Map<String, String> _getDocument(String key) {
+	private Map<String, Object> _getDocument(String key) {
 		return _store.readWholeDocument(key).entrySet().stream().collect(Collectors.toMap(
 				entry -> entry.getKey().string,
-				entry -> (String)entry.getValue())
+				entry -> entry.getValue())
 		);
 	}
 
@@ -128,5 +146,31 @@ public class EntryPointManager {
 		return ((values != null) && (1 == values.length))
 				? values[0]
 				: null;
+	}
+
+
+	private static enum Type {
+		STRING(STRING_CODEC),
+		INTEGER(new IntegerCodec()),
+		;
+		
+		public final ICodec<?> codec;
+		
+		private Type(ICodec<?> codec) {
+			this.codec = codec;
+		}
+		
+		public static Type mapFromString(String name) {
+			Type type = null;
+			if (null != name) {
+				try {
+					type = Type.valueOf(name.toUpperCase());
+				} catch (IllegalArgumentException e) {
+					// Must be an invalid name.
+					type = null;
+				}
+			}
+			return type;
+		}
 	}
 }
