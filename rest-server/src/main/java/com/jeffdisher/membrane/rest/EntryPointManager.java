@@ -80,7 +80,7 @@ public class EntryPointManager {
 			byte[] arguments = parts.get("arguments");
 			if ((null != type) && (null != code) && (null != arguments)) {
 				boolean allowExisting = (null != parts.get("allowExisting"));
-				_createField(type, topicName, allowExisting);
+				_createField(type, topicName, code, arguments, allowExisting);
 				response.setContentType("text/plain;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);
 				response.getWriter().println(topicName);
@@ -97,11 +97,13 @@ public class EntryPointManager {
 	 * 
 	 * @param type 
 	 * @param name
+	 * @param code
+	 * @param arguments
 	 * @param allowExisting
 	 */
-	private void _createField(Type type, String name, boolean allowExisting) {
+	private void _createField(Type type, String name, byte[] code, byte[] arguments, boolean allowExisting) {
 		Assert.assertTrue(!name.contains("."));
-		BoundTopic<String, ?> topic = _store.defineTopic(TopicName.fromString(name), new byte[0], new byte[0], STRING_CODEC, type.codec, allowExisting);
+		BoundTopic<String, ?> topic = _store.defineTopic(TopicName.fromString(name), code, arguments, STRING_CODEC, type.codec, allowExisting);
 		Assert.assertTrue(null != topic);
 		synchronized(_lock) {
 			_topics.put(name, topic);
