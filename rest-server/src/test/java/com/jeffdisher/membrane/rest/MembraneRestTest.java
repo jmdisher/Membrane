@@ -33,13 +33,13 @@ public class MembraneRestTest {
 		Assume.assumeNotNull(WRAPPER_SERVER_JAR);
 		// Start a Laminar server and give it time to start up.
 		ProcessWrapper wrapper = ProcessWrapper.startJavaProcess(WRAPPER_SERVER_JAR
+				, "Laminar ready for leader connection or config upload..."
 				, "--clientIp", "127.0.0.1"
 				, "--clientPort", "8000"
 				, "--clusterIp", "127.0.0.1"
 				, "--clusterPort", "9000"
 				, "--data", _folder.newFolder().getAbsolutePath()
 		);
-		Thread.sleep(1000L);
 		
 		MembraneWrapper membrane = MembraneWrapper.cluster("127.0.0.1", 8000);
 		Thread.sleep(1000L);
