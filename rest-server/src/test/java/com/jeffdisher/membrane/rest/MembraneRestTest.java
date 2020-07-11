@@ -76,7 +76,8 @@ public class MembraneRestTest {
 		public void stop() throws MalformedURLException, IOException, InterruptedException {
 			HttpURLConnection connection = (HttpURLConnection)new URL("http://localhost:8080/exit").openConnection();
 			connection.setRequestMethod("DELETE");
-			Assert.assertEquals("Shutting down\n".length(), connection.getContentLength());
+			// Note that sometimes the shutdown happens so quickly that we don't even get a response so just force the send.
+			connection.getContentLength();
 			connection.disconnect();
 			_runner.join();
 		}
