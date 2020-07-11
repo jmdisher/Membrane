@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -24,7 +25,6 @@ public class MembraneRestTest {
 	@Test
 	public void testBasicLocal() throws Throwable {
 		MembraneWrapper wrapper = MembraneWrapper.localWrapper();
-		Thread.sleep(1000L);
 		wrapper.stop();
 	}
 
@@ -42,7 +42,6 @@ public class MembraneRestTest {
 		);
 		
 		MembraneWrapper membrane = MembraneWrapper.cluster("127.0.0.1", 8000);
-		Thread.sleep(1000L);
 		membrane.stop();
 		
 		wrapper.stop();
@@ -50,19 +49,23 @@ public class MembraneRestTest {
 
 
 	private static class MembraneWrapper {
-		public static MembraneWrapper localWrapper() {
+		public static MembraneWrapper localWrapper() throws InterruptedException {
+			CountDownLatch latch = new CountDownLatch(1);
 			Thread runner = new Thread(() -> {
-				MembraneRest.main(new String[] {"--local_only"});
+				MembraneRest.mainInTest(latch, new String[] {"--local_only"});
 			});
 			runner.start();
+			latch.await();
 			return new MembraneWrapper(runner);
 		}
 		
-		public static MembraneWrapper cluster(String hostname, int port) {
+		public static MembraneWrapper cluster(String hostname, int port) throws InterruptedException {
+			CountDownLatch latch = new CountDownLatch(1);
 			Thread runner = new Thread(() -> {
-				MembraneRest.main(new String[] {"--hostname", hostname, "--port", Integer.toString(port)});
+				MembraneRest.mainInTest(latch, new String[] {"--hostname", hostname, "--port", Integer.toString(port)});
 			});
 			runner.start();
+			latch.await();
 			return new MembraneWrapper(runner);
 		}
 		

@@ -19,6 +19,16 @@ public class MembraneRest {
 	private static final String ARG_LOCAL_ONLY = "local_only";
 
 	public static void main(String[] args) {
+		// The normal entry-point doesn't care about the latch so just create anything.
+		_main(new CountDownLatch(0), args);
+	}
+
+	public static void mainInTest(CountDownLatch bindLatch, String[] args) {
+		// We are being called from a test so we want to pass in the latch the test gave us.
+		_main(bindLatch, args);
+	}
+
+	private static void _main(CountDownLatch bindLatch, String[] args) {
 		// Parse arguments.
 		String hostname = _getArgument(args, ARG_HOSTNAME);
 		String portString = _getArgument(args, ARG_PORT);
@@ -63,6 +73,9 @@ public class MembraneRest {
 		CountDownLatch stopLatch = new CountDownLatch(1);
 		new EntryPointManager(stopLatch, server, store);
 		server.start();
+		
+		// Count-down the latch in case we are part of a testing environment.
+		bindLatch.countDown();
 		
 		// Wait until we are told to shut down.
 		try {
