@@ -15,8 +15,8 @@ curl -XPUT "localhost:8080/new_topic/key1" -d "Existing user's story"
 curl -XPUT "localhost:8080/new_topic/new_guy" -d "New guy's story"
 
 # Get the JSON documents for the old key as well as the new.
-curl -XGET "localhost:8080/key1"
-curl -XGET "localhost:8080/new_guy"
+curl -XGET "localhost:8080/json/key1"
+curl -XGET "localhost:8080/json/new_guy"
 
 # Shutdown.
 curl -XDELETE "localhost:8080/exit"

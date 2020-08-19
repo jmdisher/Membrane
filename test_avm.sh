@@ -4,6 +4,7 @@
 # The general design of this is to use the CounterProgram in order to automatically assign an incrementing number to a given user, which can then be observed in the composite document.
 # This is a very trivial case but does expose how data originating within AVM can become part of a composite document.
 # NOTE:  Because the AVM isn't fully modified for Laminar, keys MUST be exactly 32 bytes long.
+# NOTE:  MUST be run on Laminar.  Example command line:  java -jar products/Laminar.jar --clientIp 127.0.0.1 --clientPort 8000 --clusterIp 127.0.0.1 --clusterPort 8001 --data /tmp/laminar/
 
 # First, we crudely package the test class as a JAR.
 mkdir temp_build
@@ -27,6 +28,6 @@ curl -XPUT "localhost:8080/counter/12345678901234567890123456789012" -d ""
 curl -XPUT "localhost:8080/counter/12345678901234567890123456789013" -d ""
 curl -XPUT "localhost:8080/name/12345678901234567890123456789012" -d "First character name"
 curl -XPUT "localhost:8080/name/12345678901234567890123456789013" -d "Second character name"
-curl -XGET "localhost:8080/12345678901234567890123456789012"
-curl -XGET "localhost:8080/12345678901234567890123456789013"
+curl -XGET "localhost:8080/json/12345678901234567890123456789012"
+curl -XGET "localhost:8080/json/12345678901234567890123456789013"
 curl -XDELETE "localhost:8080/exit"

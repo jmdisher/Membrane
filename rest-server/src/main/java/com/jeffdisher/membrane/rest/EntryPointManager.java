@@ -48,7 +48,7 @@ public class EntryPointManager {
 			response.getWriter().println("Shutting down");
 			stopLatch.countDown();
 		});
-		_server.addGetHandler("", 1, (HttpServletResponse response, String[] variables) -> {
+		_server.addGetHandler("/json", 1, (HttpServletResponse response, String[] variables) -> {
 			String key = variables[0];
 			Map<String, Object> document = _getDocument(key);
 			response.setContentType("text/plain;charset=utf-8");

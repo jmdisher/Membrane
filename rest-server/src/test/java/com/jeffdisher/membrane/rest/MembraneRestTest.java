@@ -139,12 +139,12 @@ public class MembraneRestTest {
 		Assert.assertArrayEquals("Received 11 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "topic2/key1", "topic1 key1".getBytes(StandardCharsets.UTF_8)));
 		
 		// Get the combined JSON documents.
-		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "key1"), StandardCharsets.UTF_8);
+		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "json/key1"), StandardCharsets.UTF_8);
 		JsonObject key1 = Json.parse(key1String).asObject();
 		Assert.assertEquals("TESTING", key1.get("topic1").asString());
 		Assert.assertEquals("topic1 key1", key1.get("topic2").asString());
 		Assert.assertEquals(1, key1.get("employee_number").asInt());
-		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "key2"), StandardCharsets.UTF_8);
+		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "json/key2"), StandardCharsets.UTF_8);
 		JsonObject key2 = Json.parse(key2String).asObject();
 		Assert.assertEquals("TESTING2\nnext line", key2.get("topic1").asString());
 		Assert.assertEquals(2, key2.get("employee_number").asInt());
@@ -167,11 +167,11 @@ public class MembraneRestTest {
 		Assert.assertArrayEquals("Received 15 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "new_topic/new_guy", "New guy's story".getBytes(StandardCharsets.UTF_8)));
 		
 		// Get the JSON documents for the old key as well as the new.
-		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "key1"), StandardCharsets.UTF_8);
+		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "json/key1"), StandardCharsets.UTF_8);
 		JsonObject key1 = Json.parse(key1String).asObject();
 		Assert.assertEquals("Existing user's story", key1.get("new_topic").asString());
 		Assert.assertEquals(1, key1.get("employee_number").asInt());
-		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "new_guy"), StandardCharsets.UTF_8);
+		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "json/new_guy"), StandardCharsets.UTF_8);
 		JsonObject key2 = Json.parse(key2String).asObject();
 		Assert.assertEquals("New guy's story", key2.get("new_topic").asString());
 		Assert.assertEquals(3, key2.get("employee_number").asInt());
@@ -216,11 +216,11 @@ public class MembraneRestTest {
 		Assert.assertArrayEquals("Received 21 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "name/12345678901234567890123456789013", "Second character name".getBytes(StandardCharsets.UTF_8)));
 		
 		// Get the JSON documents.
-		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "12345678901234567890123456789012"), StandardCharsets.UTF_8);
+		String key1String = new String(RestHelpers.get(MEMBRANE_URL + "json/12345678901234567890123456789012"), StandardCharsets.UTF_8);
 		JsonObject key1 = Json.parse(key1String).asObject();
 		Assert.assertEquals("First character name", key1.get("name").asString());
 		Assert.assertEquals(1, key1.get("counter").asInt());
-		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "12345678901234567890123456789013"), StandardCharsets.UTF_8);
+		String key2String = new String(RestHelpers.get(MEMBRANE_URL + "json/12345678901234567890123456789013"), StandardCharsets.UTF_8);
 		JsonObject key2 = Json.parse(key2String).asObject();
 		Assert.assertEquals("Second character name", key2.get("name").asString());
 		Assert.assertEquals(2, key2.get("counter").asInt());

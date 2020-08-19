@@ -19,8 +19,8 @@ next line"
 curl -XPUT "localhost:8080/topic2/key1" -d "topic1 key1"
 
 # Get the combined JSON documents.
-curl -XGET "localhost:8080/key1"
-curl -XGET "localhost:8080/key2"
+curl -XGET "localhost:8080/json/key1"
+curl -XGET "localhost:8080/json/key2"
 
 # Shut down.
 curl -XDELETE "localhost:8080/exit"
