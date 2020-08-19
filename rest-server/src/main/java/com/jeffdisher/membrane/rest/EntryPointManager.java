@@ -69,17 +69,17 @@ public class EntryPointManager {
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
-		_server.addPostHandler("", 1, (HttpServletResponse response, String[] variables, Map<String, byte[]> parts) -> {
+		_server.addPostHandler("", 1, (HttpServletResponse response, String[] pathVariables, StringMultiMap<String> formVariables, StringMultiMap<byte[]> multiPart, byte[] rawPost) -> {
 			// We get the topic name from the path variables.
-			String topicName = variables[0];
+			String topicName = pathVariables[0];
 			// We get everything else from the multi-part post vars.
 			// NOTE:  Using multi-part doesn't seem to be as common in REST as just encoding the binary as part of a
 			// large JSON document and then parsing it and decoding it on the server so this may change, in the future.
-			Type type = Type.mapFromString(_asString(parts.get("type")));
-			byte[] code = parts.get("code");
-			byte[] arguments = parts.get("arguments");
+			Type type = Type.mapFromString(_asString(multiPart.getIfSingle("type")));
+			byte[] code = multiPart.getIfSingle("code");
+			byte[] arguments = multiPart.getIfSingle("arguments");
 			if ((null != type) && (null != code) && (null != arguments)) {
-				boolean allowExisting = (null != parts.get("allowExisting"));
+				boolean allowExisting = (null != multiPart.getIfSingle("allowExisting"));
 				_createField(type, topicName, code, arguments, allowExisting);
 				response.setContentType("text/plain;charset=utf-8");
 				response.setStatus(HttpServletResponse.SC_OK);

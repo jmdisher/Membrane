@@ -7,8 +7,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -127,9 +125,9 @@ public class MembraneRestTest {
 
 	private void _testDotSh() throws Throwable {
 		// Create the topics.
-		Assert.assertArrayEquals("topic1\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "topic1", _createPostMap("String", new byte[0], new byte[0], false)));
-		Assert.assertArrayEquals("topic2\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "topic2", _createPostMap("String", new byte[0], new byte[0], false)));
-		Assert.assertArrayEquals("employee_number\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "employee_number", _createPostMap("integer", new byte[0], new byte[0], false)));
+		Assert.assertArrayEquals("topic1\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "topic1", _createPostMap("String", new byte[0], new byte[0], false)));
+		Assert.assertArrayEquals("topic2\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "topic2", _createPostMap("String", new byte[0], new byte[0], false)));
+		Assert.assertArrayEquals("employee_number\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "employee_number", _createPostMap("integer", new byte[0], new byte[0], false)));
 		
 		// Populate the topics for key1 and key2.
 		Assert.assertArrayEquals("Received 4 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "employee_number/key1", new byte[] {0,0,0,1}));
@@ -158,8 +156,8 @@ public class MembraneRestTest {
 	 */
 	private void _test2DotSh() throws Throwable {
 		// Create topics which are allowed to already exist.
-		Assert.assertArrayEquals("new_topic\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "new_topic", _createPostMap("String", new byte[0], new byte[0], true)));
-		Assert.assertArrayEquals("employee_number\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "employee_number", _createPostMap("integer", new byte[0], new byte[0], true)));
+		Assert.assertArrayEquals("new_topic\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "new_topic", _createPostMap("String", new byte[0], new byte[0], true)));
+		Assert.assertArrayEquals("employee_number\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "employee_number", _createPostMap("integer", new byte[0], new byte[0], true)));
 		
 		// Populate some data.
 		Assert.assertArrayEquals("Received 4 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "employee_number/new_guy", new byte[] {0,0,0,3}));
@@ -206,8 +204,8 @@ public class MembraneRestTest {
 		byte[] jar = byteStream.toByteArray();
 		
 		// Post the AVM program.
-		Assert.assertArrayEquals("counter\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "counter", _createPostMap("integer", jar, new byte[0], false)));
-		Assert.assertArrayEquals("name\n".getBytes(), RestHelpers.post(MEMBRANE_URL + "name", _createPostMap("String", new byte[0], new byte[0], false)));
+		Assert.assertArrayEquals("counter\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "counter", _createPostMap("integer", jar, new byte[0], false)));
+		Assert.assertArrayEquals("name\n".getBytes(), RestHelpers.postParts(MEMBRANE_URL + "name", _createPostMap("String", new byte[0], new byte[0], false)));
 		
 		// These writes to the counter topic will assign numbers for these keys, even though they aren't given any data.
 		Assert.assertArrayEquals("Received 0 bytes\n".getBytes(), RestHelpers.put(MEMBRANE_URL + "counter/12345678901234567890123456789012", new byte[0]));
@@ -229,13 +227,13 @@ public class MembraneRestTest {
 		Assert.assertArrayEquals("Shutting down\n".getBytes(), RestHelpers.delete(MEMBRANE_URL + "exit"));
 	}
 
-	private Map<String, byte[]> _createPostMap(String type, byte[] code, byte[] arguments, boolean allowExisting) {
-		Map<String, byte[]> map = new HashMap<>();
-		map.put("type", type.getBytes(StandardCharsets.UTF_8));
-		map.put("code", code);
-		map.put("arguments", arguments);
+	private StringMultiMap<byte[]> _createPostMap(String type, byte[] code, byte[] arguments, boolean allowExisting) {
+		StringMultiMap<byte[]> map = new StringMultiMap<>();
+		map.append("type", type.getBytes(StandardCharsets.UTF_8));
+		map.append("code", code);
+		map.append("arguments", arguments);
 		if (allowExisting) {
-			map.put("allowExisting", new byte[0]);
+			map.append("allowExisting", new byte[0]);
 		}
 		return map;
 	}
