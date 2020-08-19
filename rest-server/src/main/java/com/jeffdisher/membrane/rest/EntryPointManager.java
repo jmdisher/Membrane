@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.eclipsesource.json.Json;
@@ -42,13 +43,13 @@ public class EntryPointManager {
 		_topics = new HashMap<>();
 		
 		// Install handlers for getting whole documents and posting new fields.
-		_server.addDeleteHandler("/exit", 0, (HttpServletResponse response, String[] variables) -> {
+		_server.addDeleteHandler("/exit", 0, (HttpServletRequest request, HttpServletResponse response, String[] variables) -> {
 			response.setContentType("text/plain;charset=utf-8");
 			response.setStatus(HttpServletResponse.SC_OK);
 			response.getWriter().println("Shutting down");
 			stopLatch.countDown();
 		});
-		_server.addGetHandler("/json", 1, (HttpServletResponse response, String[] variables) -> {
+		_server.addGetHandler("/json", 1, (HttpServletRequest request, HttpServletResponse response, String[] variables) -> {
 			String key = variables[0];
 			Map<String, Object> document = _getDocument(key);
 			response.setContentType("text/plain;charset=utf-8");
@@ -69,7 +70,7 @@ public class EntryPointManager {
 			}
 			response.getWriter().println(root.toString(WriterConfig.PRETTY_PRINT));
 		});
-		_server.addPostHandler("", 1, (HttpServletResponse response, String[] pathVariables, StringMultiMap<String> formVariables, StringMultiMap<byte[]> multiPart, byte[] rawPost) -> {
+		_server.addPostHandler("", 1, (HttpServletRequest request, HttpServletResponse response, String[] pathVariables, StringMultiMap<String> formVariables, StringMultiMap<byte[]> multiPart, byte[] rawPost) -> {
 			// We get the topic name from the path variables.
 			String topicName = pathVariables[0];
 			// We get everything else from the multi-part post vars.
@@ -108,7 +109,7 @@ public class EntryPointManager {
 		synchronized(_lock) {
 			_topics.put(name, topic);
 		}
-		_server.addGetHandler("/" + name, 1, (HttpServletResponse response, String[] variables) -> {
+		_server.addGetHandler("/" + name, 1, (HttpServletRequest request, HttpServletResponse response, String[] variables) -> {
 			Object value = topic.get(variables[0]);
 			if (null != value) {
 				response.setContentType("text/plain;charset=utf-8");
@@ -118,7 +119,7 @@ public class EntryPointManager {
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			}
 		});
-		_server.addPutHandler("/" + name, 1, (HttpServletResponse response, String[] variables, InputStream inputStream) -> {
+		_server.addPutHandler("/" + name, 1, (HttpServletRequest request, HttpServletResponse response, String[] variables, InputStream inputStream) -> {
 			byte[] buffer = new byte[VALUE_SIZE_BYTES];
 			int readSize = inputStream.read(buffer);
 			int start = 0;
