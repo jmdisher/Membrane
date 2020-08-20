@@ -69,7 +69,8 @@ public class MembraneRest {
 		}
 		
 		// Create the server and start it.
-		RestServer server = new RestServer(8080);
+		// We don't support any static content delivery.
+		RestServer server = new RestServer(8080, null);
 		CountDownLatch stopLatch = new CountDownLatch(1);
 		new EntryPointManager(stopLatch, server, store);
 		server.start();
