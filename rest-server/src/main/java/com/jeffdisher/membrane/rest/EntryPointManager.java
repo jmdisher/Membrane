@@ -14,6 +14,8 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.WriterConfig;
+import com.jeffdisher.breakwater.RestServer;
+import com.jeffdisher.breakwater.StringMultiMap;
 import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.utils.Assert;
 import com.jeffdisher.membrane.store.BoundTopic;

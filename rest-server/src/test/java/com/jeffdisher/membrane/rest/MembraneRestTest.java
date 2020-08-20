@@ -22,6 +22,8 @@ import org.junit.rules.TemporaryFolder;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.jeffdisher.breakwater.StringMultiMap;
+import com.jeffdisher.breakwater.utilities.RestHelpers;
 import com.jeffdisher.membrane.avm.CounterProgram;
 
 

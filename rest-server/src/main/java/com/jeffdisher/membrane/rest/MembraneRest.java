@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 
+import com.jeffdisher.breakwater.RestServer;
 import com.jeffdisher.laminar.utils.Assert;
 import com.jeffdisher.membrane.store.SynchronousStore;
 import com.jeffdisher.membrane.store.connection.IConnectionFactory;
