@@ -23,6 +23,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.jeffdisher.breakwater</groupId>
+			<artifactId>rest-server</artifactId>
+			<version>0.0.0-pre0</version>
+		</dependency>
+		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>key-value-store</artifactId>
 			<version>${project.version}</version>

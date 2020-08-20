@@ -20,6 +20,10 @@
 			<id>laminar-repo</id>
 			<url>https://github.com/jmdisher/Laminar/raw/maven/repo</url>
 		</repository>
+		<repository>
+			<id>breakwater-repo</id>
+			<url>https://github.com/jmdisher/Breakwater/raw/maven/repo</url>
+		</repository>
 	</repositories>
 
 	<modules>
